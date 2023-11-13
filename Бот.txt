@@ -1,0 +1,63 @@
+import time
+import requests
+import telebot
+from telebot import types
+
+bot = telebot.TeleBot("6737857569:AAFWVtLyZGPiUQlwD_CDu8WX73KQpfKnapg")
+
+
+def send_telegram_message(bot_token, chat_id, message):
+    api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = {
+        "chat_id": chat_id,
+        "text": message
+    }
+    response = requests.post(api_url, json=data)
+    if response.status_code != 200:
+        print(f"Failed to send message. Response code: {response.status_code}")
+    else:
+        print("Message sent successfully!")
+
+
+# Команда /start
+@bot.message_handler(commands=["start"])
+def main(message):
+    bot.send_message(message.chat.id, "Привет Я тест бот, чтобы узнать мои команды введи /ahelp")
+
+
+# Команда /ahelp
+@bot.message_handler(commands=["ahelp"])
+def main(message):
+    bot.send_message(message.chat.id,
+                     "Все мои команды /start - Начало работы /ahelp - помощь по командам /zav - обработать заявку /web - наш оф.сайт")
+
+
+# Заполните Анкету
+@bot.message_handler(commands=["zav"])
+def website(message):
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("Наша анкета",
+                                          url="https://docs.google.com/forms/d/1FxZhBkjjPIyOJu-vG314AaYYPVDjDvNDiHP7ndq8yoA/edit"))
+    bot.send_message(message.chat.id, "Заполните анкету", reply_markup=markup)
+
+
+# Ссылка на сайт
+@bot.message_handler(commands=["web"])
+def website(message):
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("Наш сайт", url="https://knastu.ru"))
+    bot.send_message(message.chat.id, "Наш сайт", reply_markup=markup)
+
+
+if __name__ == "__main__":
+    bot_token = "6737857569:AAFWVtLyZGPiUQlwD_CDu8WX73KQpfKnapg"
+    chat_id = "1097562950"
+    interval = 20
+
+    messages = ["Привет я бот уведомка1", "Сегодня отличный день", "Завтра будет еще лучше"]
+
+    for message in messages:
+        send_telegram_message(bot_token, chat_id, message)
+        time.sleep(interval)
+
+    bot.polling(none_stop=True)
