@@ -1,0 +1,79 @@
+import time
+import requests
+import telebot
+import dash
+from dash import dcc
+from dash import html
+from dash.dependencies import Input, Output
+from telebot import types
+from flask import Flask
+
+bot_token = "6737857569:AAFWVtLyZGPiUQlwD_CDu8WX73KQpfKnapg"
+chat_id = "1097562950"
+interval = 20
+messages = ["привет я бот уведомка1", "сегодня отличный день", "завтра будет еще лучше"]
+
+bot = telebot.TeleBot(bot_token)
+server = Flask(__name__)
+app = dash.Dash(__name__, server=server)
+
+
+def send_telegram_message(bot_token, chat_id, message):
+    api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = {
+        "chat_id": chat_id,
+        "text": message
+    }
+    response = requests.post(api_url, json=data)
+    if response.status_code != 200:
+        print(f"Failed to send message. Response code: {response.status_code}")
+    else:
+        print("Message sent successfully!")
+
+
+@app.server.route("/")
+def index():
+    return "Hello, Dash!"
+
+
+@app.callback(Output('output', 'children'), [Input('input', 'value')])
+def update_output(value):
+    return 'Input: "{}"'.format(value)
+
+
+# команда /start
+@bot.message_handler(commands=["start"])
+def start_message(message):
+    bot.send_message(message.chat.id, "привет я тест бот, чтобы узнать мои команды введи /ahelp")
+
+
+# команда /ahelp
+@bot.message_handler(commands=["ahelp"])
+def help_message(message):
+    bot.send_message(message.chat.id, "все мои команды /start - начало работы /ahelp - помощь по командам /zav - обработать заявку /web - наш оф.сайт")
+
+
+# заполните анкету
+@bot.message_handler(commands=["zav"])
+def fill_form(message):
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("наша анкета", url="https://docs.google.com/forms/d/1fxzhbkjjpiyoju-vg314aayypvdjdvndihp7ndq8yoa/edit"))
+    bot.send_message(message.chat.id, "заполните анкету", reply_markup=markup)
+
+
+# ссылка на сайт
+@bot.message_handler(commands=["web"])
+def send_website(message):
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("наш сайт", url="https://knastu.ru"))
+    bot.send_message(message.chat.id, "наш сайт", reply_markup=markup)
+
+
+if __name__ == "__main__":
+    for message in messages:
+        send_telegram_message(bot_token, chat_id, message)
+        time.sleep(interval)
+
+    bot.polling(none_stop=True)
+
+    app.run_server(debug=True)
